@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IQ Daily — How Far Can You Go?</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #141418;
+    --surface2: #1c1c22;
+    --border: #2a2a35;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --green: #4caf82;
+    --red: #d95f5f;
+    --blue: #5b8fd4;
+    --text: #e8e4dc;
+    --text-muted: #7a7880;
+    --text-dim: #4a4858;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.22;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 720px;
+    padding: 0 20px 60px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 0 22px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+
+  .logo-label {
+    font-size: 10px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    font-weight: 900;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, #a07830 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .date-strip {
+    margin-top: 12px;
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .date-strip span { color: var(--gold); }
+
+  /* ── COUNTDOWN ── */
+  .countdown-bar {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+  }
+  .countdown-bar strong { color: var(--gold); font-size: 13px; }
+
+  /* ── LIVE STREAK BANNER ── */
+  .streak-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    animation: slideUp 0.4s ease both;
+  }
+
+  .streak-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .streak-flame {
+    font-size: 1.6rem;
+    line-height: 1;
+    transition: transform 0.2s ease;
+  }
+
+  .streak-count {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .streak-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .streak-right {
+    text-align: right;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+  .streak-right strong { color: var(--text-muted); display: block; font-size: 12px; }
+
+  /* Dot trail */
+  .dot-trail {
+    display: flex;
+    gap: 5px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .trail-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s ease;
+  }
+  .trail-dot.won  { background: var(--green); }
+  .trail-dot.lost { background: var(--red); }
+
+  /* ── STATS ROW ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    margin-bottom: 24px;
+    animation: slideUp 0.4s 0.05s ease both;
+    opacity: 0;
+    animation-fill-mode: forwards;
+    overflow: hidden;
+  }
+
+  .stat-cell {
+    background: var(--surface);
+    padding: 14px 10px;
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--gold);
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 2px;
+    display: block;
+  }
+
+  /* ── QUESTION CARD ── */
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    animation: slideUp 0.45s ease both;
+  }
+
+  .question-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    transition: background 0.4s ease;
+  }
+
+  .question-card.correct-glow::before {
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes popIn {
+    0%   { transform: scale(0.92); opacity: 0; }
+    60%  { transform: scale(1.02); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .q-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .q-left { display: flex; align-items: center; gap: 10px; }
+
+  .q-type {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 2px;
+    color: var(--gold);
+  }
+
+  .q-num {
+    color: var(--text-dim);
+    font-size: 10px;
+  }
+
+  .q-difficulty { display: flex; gap: 4px; }
+
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+  .dot.on { background: var(--gold); }
+
+  .question-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1rem, 2.4vw, 1.25rem);
+    line-height: 1.65;
+    color: var(--text);
+    white-space: pre-line;
+  }
+
+  .question-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+  }
+
+  /* sequence tiles */
+  .sequence {
+    display: flex;
+    gap: 8px;
+    margin: 14px 0;
+    flex-wrap: wrap;
+  }
+
+  .seq-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    width: 50px; height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    border-radius: 3px;
+  }
+
+  .seq-item.blank { border-color: var(--gold); color: var(--gold); font-size: 1.5rem; }
+
+  /* ── OPTIONS ── */
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .option-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 13px 15px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    text-align: left;
+    transition: all 0.15s ease;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .option-btn .opt-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    min-width: 14px;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--gold);
+    background: #1e1e26;
+    color: var(--gold-light);
+    transform: translateY(-1px);
+  }
+
+  .option-btn.selected  { border-color: var(--blue); background: rgba(91,143,212,0.08); }
+  .option-btn.correct   { border-color: var(--green); background: rgba(76,175,130,0.12); color: var(--green); }
+  .option-btn.wrong     { border-color: var(--red); background: rgba(217,95,95,0.08); color: var(--red); opacity: 0.7; }
+  .option-btn:disabled  { cursor: default; }
+
+  /* ── SUBMIT ── */
+  .actions { margin-bottom: 24px; }
+
+  .btn-submit {
+    width: 100%;
+    background: var(--gold);
+    color: #0d0d0f;
+    border: none;
+    padding: 14px 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+  }
+
+  .btn-submit:hover:not(:disabled) { background: var(--gold-light); transform: translateY(-1px); }
+  .btn-submit:disabled { opacity: 0.4; cursor: default; }
+
+  /* ── FEEDBACK PANEL (inline, between answer + next) ── */
+  .feedback-panel {
+    display: none;
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin-bottom: 18px;
+    animation: popIn 0.35s ease both;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feedback-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+  }
+
+  .feedback-panel.show { display: block; }
+  .feedback-panel.fb-correct { background: rgba(76,175,130,0.06); }
+  .feedback-panel.fb-correct::before { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+  .feedback-panel.fb-wrong   { background: rgba(217,95,95,0.06); }
+  .feedback-panel.fb-wrong::before   { background: linear-gradient(90deg, transparent, var(--red), transparent); }
+
+  .fb-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .fb-icon { font-size: 1.4rem; }
+
+  .fb-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .fb-correct .fb-title { color: var(--green); }
+  .fb-wrong   .fb-title { color: var(--red); }
+
+  .fb-explanation {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  .fb-correct-ans {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .fb-correct-ans strong { color: var(--gold); }
+
+  /* ── PERCENT BAR ── */
+  .pct-block {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .pct-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .pct-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .pct-number.pct-high  { color: var(--green); }
+  .pct-number.pct-mid   { color: var(--gold); }
+  .pct-number.pct-low   { color: var(--red); }
+
+  .pct-bar-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .pct-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    width: 0;
+    transition: width 0.9s cubic-bezier(0.22,1,0.36,1);
+  }
+
+  .pct-bar-fill.pct-high  { background: var(--green); }
+  .pct-bar-fill.pct-mid   { background: var(--gold); }
+  .pct-bar-fill.pct-low   { background: var(--red); }
+
+  /* ── NEXT BUTTON ── */
+  .btn-next {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--green);
+    color: var(--green);
+    padding: 13px 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+    display: none;
+    margin-bottom: 24px;
+    animation: slideUp 0.3s ease both;
+  }
+
+  .btn-next:hover { background: rgba(76,175,130,0.1); transform: translateY(-1px); }
+  .btn-next.show { display: block; }
+
+  /* ── GAME OVER SCREEN ── */
+  .game-over {
+    display: none;
+    text-align: center;
+    padding: 40px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 24px;
+    animation: popIn 0.4s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .game-over::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+  }
+
+  .game-over.show { display: block; }
+
+  .go-icon { font-size: 3rem; margin-bottom: 10px; }
+
+  .go-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--red);
+    margin-bottom: 6px;
+  }
+
+  .go-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--gold);
+    margin: 12px 0 4px;
+    line-height: 1;
+  }
+
+  .go-score-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+
+  .go-best {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 18px;
+  }
+  .go-best strong { color: var(--gold-light); }
+
+  .go-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    line-height: 1.7;
+  }
+
+  /* ── PERFECT / ALREADY-PLAYED SCREEN ── */
+  .done-screen {
+    display: none;
+    text-align: center;
+    padding: 36px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 24px;
+    animation: popIn 0.4s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .done-screen::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .done-screen.show { display: block; }
+  .done-screen .ds-icon { font-size: 2.6rem; margin-bottom: 10px; }
+  .done-screen h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+  .done-screen p {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    max-width: 460px;
+    margin: 0 auto 6px;
+  }
+  .done-screen .ds-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--gold);
+    margin: 8px 0 2px;
+  }
+  .done-screen .ds-score-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+
+  /* ── SHARE ── */
+  .share-btn {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 10px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+    margin-top: 8px;
+  }
+  .share-btn:hover { background: var(--gold); color: #0d0d0f; }
+
+  .share-copied {
+    font-size: 11px;
+    color: var(--green);
+    margin-top: 8px;
+    display: none;
+  }
+
+  /* ── MISC ── */
+  footer {
+    padding: 28px 0 20px;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    border-top: 1px solid var(--border);
+    width: 100%;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--gold);
+    color: #0d0d0f;
+    padding: 10px 22px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%      { transform: translateX(-6px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(4px); }
+  }
+  .shake { animation: shake 0.4s ease; }
+
+  @media (max-width: 480px) {
+    .options-grid { grid-template-columns: 1fr; }
+    .question-card { padding: 18px; }
+    .sequence { gap: 6px; }
+    .seq-item { width: 44px; height: 44px; font-size: 1rem; }
+    .streak-banner { flex-wrap: wrap; gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <header>
+    <div class="logo-label">Daily Challenge</div>
+    <h1>IQ Daily</h1>
+    <div class="subtitle">Answer correctly · Keep going · One mistake ends it</div>
+    <div class="date-strip">
+      <span id="dateDisplay">—</span>
+    </div>
+  </header>
+
+  <div class="countdown-bar">
+    Resets in <strong id="countdown">—:——:——</strong>
+  </div>
+
+  <!-- LIVE STREAK BANNER -->
+  <div class="streak-banner" id="streakBanner">
+    <div class="streak-left">
+      <div class="streak-flame" id="streakFlame">🧠</div>
+      <div>
+        <div class="streak-count" id="streakCount">0</div>
+        <div class="streak-label">in a row today</div>
+      </div>
+    </div>
+    <div class="streak-right">
+      <strong id="bestLabel">—</strong>
+      <span>best today</span>
+      <div class="dot-trail" id="dotTrail"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-cell">
+      <span class="stat-val" id="statSessions">0</span>
+      <span class="stat-label">Days Played</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-val" id="statBestEver">0</span>
+      <span class="stat-label">Best Streak Ever</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-val" id="statDayStreak">0</span>
+      <span class="stat-label">Day Streak 🔥</span>
+    </div>
+  </div>
+
+  <!-- MAIN GAME -->
+  <div id="gameArea">
+    <!-- QUESTION CARD -->
+    <div class="question-card" id="questionCard">
+      <div class="q-meta">
+        <div class="q-left">
+          <span class="q-type" id="qType">—</span>
+          <span class="q-num" id="qNum">Q1</span>
+        </div>
+        <div class="q-difficulty" id="qDiff"></div>
+      </div>
+      <div id="qSequence" class="sequence" style="display:none"></div>
+      <div class="question-text" id="questionText"></div>
+      <div class="question-hint" id="questionHint" style="display:none"></div>
+    </div>
+
+    <!-- OPTIONS -->
+    <div class="options-grid" id="optionsGrid"></div>
+
+    <!-- SUBMIT -->
+    <div class="actions">
+      <button class="btn-submit" id="submitBtn" disabled onclick="submitAnswer()">Confirm Answer</button>
+    </div>
+
+    <!-- INLINE FEEDBACK -->
+    <div class="feedback-panel" id="feedbackPanel">
+      <div class="fb-header">
+        <span class="fb-icon" id="fbIcon"></span>
+        <span class="fb-title" id="fbTitle"></span>
+      </div>
+      <div class="fb-explanation" id="fbExplanation"></div>
+      <div class="fb-correct-ans" id="fbCorrectAns"></div>
+      <div class="pct-block" id="pctBlock">
+        <div class="pct-label-row">
+          <span>Players who got this right</span>
+          <span class="pct-number" id="pctNumber">—</span>
+        </div>
+        <div class="pct-bar-track">
+          <div class="pct-bar-fill" id="pctBarFill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEXT QUESTION BUTTON -->
+    <button class="btn-next" id="nextBtn" onclick="nextQuestion()">Next Question →</button>
+
+    <!-- GAME OVER -->
+    <div class="game-over" id="gameOver">
+      <div class="go-icon">💥</div>
+      <div class="go-title">Game Over</div>
+      <div class="go-score" id="goScore">0</div>
+      <div class="go-score-label">correct in a row</div>
+      <div class="go-best" id="goBest"></div>
+      <div class="go-sub" id="goSub"></div>
+      <button class="share-btn" onclick="shareResult()">Share Result</button>
+      <div class="share-copied" id="shareCopied1">Copied ✓</div>
+    </div>
+
+  </div>
+
+  <!-- DONE / ALREADY-PLAYED SCREEN -->
+  <div class="done-screen" id="doneScreen">
+    <div class="ds-icon" id="dsIcon">🏆</div>
+    <h2 id="dsTitle">Already played today!</h2>
+    <div class="ds-score" id="dsScore">—</div>
+    <div class="ds-score-label">correct in a row</div>
+    <p id="dsText">Come back tomorrow for a new run.</p>
+    <br>
+    <button class="share-btn" onclick="shareResult()">Share Result</button>
+    <div class="share-copied" id="shareCopied2">Copied ✓</div>
+  </div>
+
+</div><!-- /wrapper -->
+
+<footer>IQ Daily — Train your mind, one question at a time</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// QUESTION BANK
+// ─────────────────────────────────────────────
+const QUESTIONS = [
+  { type:"SEQUENCE", difficulty:2, text:"What comes next?", sequence:[2,6,18,54,"?"], options:["108","162","72","96"], answer:1, explanation:"Each number is multiplied by 3. 54 × 3 = 162.", hint:"Look at how consecutive numbers relate." },
+  { type:"ODD ONE OUT", difficulty:2, text:"Which word is the odd one out?", options:["MARS","VENUS","MOON","JUPITER"], answer:2, explanation:"The Moon is Earth's satellite, not a planet. Mars, Venus, and Jupiter are all planets.", hint:"Consider what category each belongs to." },
+  { type:"ANALOGY", difficulty:2, text:"Book is to Library as Painting is to ___?", options:["Canvas","Museum","Artist","Frame"], answer:1, explanation:"A book is stored in a library; a painting is displayed in a museum.", hint:"Think about where each object is kept or displayed." },
+  { type:"SEQUENCE", difficulty:3, text:"What number replaces the question mark?", sequence:[1,4,9,16,25,"?"], options:["30","36","42","49"], answer:1, explanation:"These are perfect squares: 1², 2², 3²… The next is 6² = 36.", hint:"Each number is a perfect square." },
+  { type:"LOGIC", difficulty:3, text:"All Bloops are Razzles. All Razzles are Lazzles.\nWhich must be true?", options:["All Bloops are Lazzles","All Lazzles are Bloops","Some Razzles are not Lazzles","No Bloops are Lazzles"], answer:0, explanation:"Bloops ⊆ Razzles and Razzles ⊆ Lazzles, so by transitivity all Bloops are Lazzles.", hint:"Apply the transitive property." },
+  { type:"SEQUENCE", difficulty:3, text:"What letter comes next?", sequence:["A","C","F","J","?"], options:["N","O","P","M"], answer:1, explanation:"Gaps increase by 1: +2, +3, +4, +5. J → O (+5). Answer: O.", hint:"Count the gap between each pair in the alphabet." },
+  { type:"LOGIC", difficulty:2, text:"A farmer has 17 sheep. All but 9 run away.\nHow many sheep remain?", options:["8","17","9","None"], answer:2, explanation:"'All but 9' means all except 9. So 9 remain.", hint:"'All but 9' is the key phrase — read carefully." },
+  { type:"ANALOGY", difficulty:2, text:"Glove is to Hand as Helmet is to ___?", options:["Soldier","Head","Armour","Neck"], answer:1, explanation:"A glove protects the hand; a helmet protects the head.", hint:"Think about which body part each protects." },
+  { type:"SEQUENCE", difficulty:3, text:"What comes next?", sequence:[3,5,10,12,24,26,"?"], options:["28","52","50","48"], answer:1, explanation:"Pattern alternates: ×2, +2, ×2, +2… 26 × 2 = 52.", hint:"The operations alternate between two rules." },
+  { type:"LOGIC", difficulty:2, text:"Some cats are black. All black things absorb heat.\nTherefore:", options:["All cats absorb heat","Some cats absorb heat","No cats absorb heat","All heat is absorbed by cats"], answer:1, explanation:"Only the black cats absorb heat. Since only some cats are black, only some cats absorb heat.", hint:"Apply the rules only to what you know for certain." },
+  { type:"SEQUENCE", difficulty:3, text:"What number replaces the question mark?", sequence:[2,3,5,7,11,"?"], options:["13","14","12","15"], answer:0, explanation:"These are prime numbers. The next prime after 11 is 13.", hint:"Each number has exactly two divisors." },
+  { type:"ANALOGY", difficulty:3, text:"Pen is to Poet as Brush is to ___?", options:["Paint","Painter","Canvas","Colour"], answer:1, explanation:"A pen is the poet's tool; a brush is the painter's tool. Tool → user.", hint:"Is the relationship tool→material or tool→user?" },
+  { type:"LOGIC", difficulty:3, text:"In a race, you overtake the person in 3rd place.\nWhat position are you now in?", options:["1st","2nd","3rd","4th"], answer:2, explanation:"You take their spot — 3rd place. You can't jump to 1st by passing 3rd.", hint:"Whose position do you literally take?" },
+  { type:"SEQUENCE", difficulty:3, text:"What comes next?", sequence:[1,1,2,3,5,8,"?"], options:["12","13","11","16"], answer:1, explanation:"Fibonacci: each number is the sum of the two before it. 5 + 8 = 13.", hint:"How does each number relate to the two before it?" },
+  { type:"ODD ONE OUT", difficulty:2, text:"Which is the odd one out?", options:["TRIANGLE","SQUARE","CIRCLE","PENTAGON"], answer:2, explanation:"A circle has no straight sides. The others are all polygons.", hint:"Think about straight sides and corners." },
+  { type:"SEQUENCE", difficulty:3, text:"What number should replace the question mark?", sequence:[81,27,9,3,"?"], options:["0","1","2","6"], answer:1, explanation:"Each number is divided by 3. 3 ÷ 3 = 1.", hint:"Consider division rather than subtraction." },
+  { type:"ANALOGY", difficulty:3, text:"Archipelago is to Islands as Constellation is to ___?", options:["Sky","Stars","Planets","Galaxies"], answer:1, explanation:"An archipelago is a group of islands; a constellation is a group of stars.", hint:"Both words describe a named cluster of something." },
+  { type:"LOGIC", difficulty:4, text:"A bat and ball cost £1.10 together.\nThe bat costs £1.00 more than the ball.\nHow much does the ball cost?", options:["10p","5p","15p","20p"], answer:1, explanation:"Let ball = x, bat = x + £1. Then 2x + 1 = 1.10, so x = 5p. (10p is a trap!)", hint:"Set up an equation — the intuitive answer is wrong." },
+  { type:"SEQUENCE", difficulty:2, text:"What number comes next?", sequence:[100,96,88,76,60,"?"], options:["44","40","48","36"], answer:1, explanation:"Differences: −4, −8, −12, −16, −20. 60 − 20 = 40.", hint:"Look at the differences between consecutive terms." },
+  { type:"ANALOGY", difficulty:2, text:"Composer is to Symphony as Architect is to ___?", options:["Blueprint","Building","Material","Landscape"], answer:1, explanation:"A composer creates a symphony; an architect creates a building. Creator → creation.", hint:"What does each professional ultimately produce?" },
+  { type:"ODD ONE OUT", difficulty:3, text:"Which word does NOT belong?", options:["MINIM","CROTCHET","TREBLE","QUAVER"], answer:2, explanation:"Minim, crotchet, and quaver are note durations. Treble is a clef, not a duration.", hint:"All but one belong to the same musical subcategory." },
+  { type:"SEQUENCE", difficulty:4, text:"What is the missing number?", sequence:[2,6,12,20,30,"?"], options:["40","42","44","48"], answer:1, explanation:"Pattern: n×(n+1). Terms: 1×2, 2×3, 3×4, 4×5, 5×6, 6×7 = 42.", hint:"Try expressing each term as a product of two consecutive integers." },
+  { type:"LOGIC", difficulty:3, text:"How many months have 28 days?", options:["1","2","4","12"], answer:3, explanation:"Every month has at least 28 days — all 12 months.", hint:"The question doesn't say 'exactly 28 days'." },
+  { type:"SEQUENCE", difficulty:4, text:"What number replaces the question mark?", sequence:[7,10,8,11,9,12,"?"], options:["13","10","11","14"], answer:1, explanation:"Two interleaved sequences: 7,8,9,10 and 10,11,12,13. Next in first: 10.", hint:"Look at every other number as a separate sequence." },
+  { type:"LOGIC", difficulty:3, text:"Mary's father has five daughters:\nNana, Nene, Nini, Nono. What is the fifth?", options:["Nunu","Nana","Nene","Mary"], answer:3, explanation:"The question itself tells you — 'Mary's father has five daughters'. Mary is the fifth.", hint:"The answer is hidden inside the question." },
+  { type:"SEQUENCE", difficulty:2, text:"What letter is missing?", sequence:["Z","X","V","T","R","?"], options:["P","Q","O","S"], answer:0, explanation:"Skip one letter each time going backwards: Z, X, V, T, R, P.", hint:"Count how many letters are skipped each step." },
+  { type:"ANALOGY", difficulty:4, text:"Lachrymose is to Tears as Somnolent is to ___?", options:["Dreams","Sleep","Night","Yawning"], answer:1, explanation:"Lachrymose = prone to crying; somnolent = prone to sleep. Both describe a tendency.", hint:"Both words describe a tendency toward a physical state." },
+  { type:"SEQUENCE", difficulty:2, text:"What comes next?", sequence:[1,2,4,8,16,"?"], options:["24","30","32","20"], answer:2, explanation:"Each number doubles. 16 × 2 = 32. This is 2ⁿ.", hint:"Each term is a power of 2." },
+  { type:"LOGIC", difficulty:5, text:"A clock shows 3:15. What is the angle between the minute and hour hands?", options:["0°","7.5°","15°","22.5°"], answer:1, explanation:"Minute hand: 90°. Hour hand: 90° + 15×0.5° = 97.5°. Difference = 7.5°.", hint:"The hour hand moves 0.5° per minute — it has passed 3." },
+  { type:"ODD ONE OUT", difficulty:3, text:"Which word is the odd one out?", options:["PYTHON","COBRA","VIPER","GECKO"], answer:3, explanation:"Python, cobra, viper are snakes. A gecko is a lizard.", hint:"All are reptiles — can you narrow it down further?" },
+  { type:"ANALOGY", difficulty:3, text:"Stethoscope is to Doctor as Gavel is to ___?", options:["Carpenter","Judge","Auctioneer","Politician"], answer:1, explanation:"A stethoscope is the doctor's iconic tool; a gavel is the judge's.", hint:"Think about the iconic symbol of each professional's authority." },
+  { type:"SEQUENCE", difficulty:3, text:"What number is missing?", sequence:[5,10,20,"?",80,160], options:["30","40","35","50"], answer:1, explanation:"Each term doubles. 20 × 2 = 40.", hint:"What single operation connects each pair?" },
+  { type:"LOGIC", difficulty:4, text:"You have a 3L jug and a 5L jug.\nHow can you measure exactly 4 litres?", options:["Fill 5L → pour into 3L → empty 3L → pour 2L in 3L → fill 5L → top up 3L → 4L left","Fill 3L twice into 5L, leftover in 3L, repeat","Fill 5L, pour 1L out carefully","Impossible"], answer:0, explanation:"Fill 5L → pour into 3L (2L left) → empty 3L → move 2L to 3L → fill 5L → pour into 3L (needs 1L) → 4L remains.", hint:"Fill the large jug and pour into the small one." },
+  { type:"ODD ONE OUT", difficulty:2, text:"Which number is the odd one out?\n121 · 144 · 169 · 196 · 200", options:["121","169","196","200"], answer:3, explanation:"121=11², 144=12², 169=13², 196=14². 200 is not a perfect square.", hint:"A special mathematical property is shared by most." },
+  { type:"SEQUENCE", difficulty:4, text:"What number replaces the question mark?", sequence:[1,3,6,10,15,"?"], options:["18","21","20","24"], answer:1, explanation:"Triangular numbers: add 2, 3, 4, 5, 6. 15 + 6 = 21.", hint:"The differences between terms increase by 1 each time." },
+  { type:"LOGIC", difficulty:3, text:"There are 3 boxes: APPLES, ORANGES, APPLES & ORANGES.\nAll labels are WRONG. You pick one fruit from one box.\nWhich box do you pick from?", options:["APPLES","ORANGES","APPLES & ORANGES","Any box"], answer:2, explanation:"Pick from 'APPLES & ORANGES' — it must contain only one fruit (label is wrong). That tells you its true contents, and you can deduce the rest.", hint:"Every label is wrong — use that constraint." },
+  { type:"ANALOGY", difficulty:3, text:"Cartographer is to Maps as Lexicographer is to ___?", options:["Libraries","Dictionaries","Grammar","Languages"], answer:1, explanation:"A cartographer makes maps; a lexicographer compiles dictionaries.", hint:"Think about what each specialist creates." },
+  { type:"SEQUENCE", difficulty:3, text:"What comes next?", sequence:["AZ","BY","CX","DW","?"], options:["EV","FU","EU","FV"], answer:0, explanation:"First letter goes A,B,C,D,E (+1 forward). Second goes Z,Y,X,W,V (−1 backward). Answer: EV.", hint:"Track the two letters independently." },
+  { type:"LOGIC", difficulty:3, text:"If you have only one match and enter a dark room with a candle, oil lamp, and fireplace — what do you light first?", options:["The candle","The oil lamp","The fireplace","The match"], answer:3, explanation:"You light the match first! Everything else is lit using the match.", hint:"What must happen before any other light source can be lit?" },
+  { type:"ODD ONE OUT", difficulty:2, text:"Which is the odd one out?", options:["VIOLIN","CELLO","TRUMPET","VIOLA"], answer:2, explanation:"Violin, cello, and viola are all string instruments. A trumpet is a brass instrument.", hint:"Consider the instrument family each belongs to." },
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let gameState = {
+  questionIndex: 0,   // offset into daily-shuffled order
+  streak: 0,
+  history: [],        // array of true/false per question
+  over: false,
+};
+
+let selectedOption = null;
+let dailyOrder = [];  // shuffled indices for today
+
+// ─────────────────────────────────────────────
+// PERSISTENCE
+// ─────────────────────────────────────────────
+function getTodayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function loadSession() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('iqd2_session') || 'null');
+    if (raw && raw.key === getTodayKey()) return raw;
+    return null;
+  } catch { return null; }
+}
+
+function saveSession() {
+  localStorage.setItem('iqd2_session', JSON.stringify({
+    key: getTodayKey(),
+    questionIndex: gameState.questionIndex,
+    streak: gameState.streak,
+    history: gameState.history,
+    over: gameState.over,
+    order: dailyOrder,
+  }));
+}
+
+function loadGlobalStats() {
+  try { return JSON.parse(localStorage.getItem('iqd2_stats') || '{}'); }
+  catch { return {}; }
+}
+
+function saveGlobalStats(s) {
+  localStorage.setItem('iqd2_stats', JSON.stringify(s));
+}
+
+function updateGlobalStats(streak, over) {
+  const s = loadGlobalStats();
+  // day streak (consecutive days played)
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const yKey = `${yesterday.getFullYear()}-${yesterday.getMonth()}-${yesterday.getDate()}`;
+  if (!s.lastDayKey) {
+    s.dayStreak = 1;
+  } else if (s.lastDayKey === yKey) {
+    s.dayStreak = (s.dayStreak || 0) + 1;
+  } else if (s.lastDayKey !== getTodayKey()) {
+    s.dayStreak = 1;
+  }
+  s.lastDayKey = getTodayKey();
+  s.sessions = (s.sessions || 0) + 1;
+  if (streak > (s.bestEver || 0)) s.bestEver = streak;
+  saveGlobalStats(s);
+  return s;
+}
+
+// ─────────────────────────────────────────────
+// DAILY ORDER (seeded shuffle)
+// ─────────────────────────────────────────────
+function seededShuffle(arr, seed) {
+  const a = [...arr];
+  let s = seed;
+  for (let i = a.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    const j = Math.abs(s) % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function getDayOfYear(date) {
+  const start = new Date(date.getFullYear(), 0, 0);
+  return Math.floor((date - start) / 86400000);
+}
+
+function buildDailyOrder() {
+  const seed = getDayOfYear(new Date()) * 31337;
+  return seededShuffle(QUESTIONS.map((_,i)=>i), seed);
+}
+
+function getCurrentQuestion() {
+  return QUESTIONS[dailyOrder[gameState.questionIndex % dailyOrder.length]];
+}
+
+// ─────────────────────────────────────────────
+// COUNTDOWN
+// ─────────────────────────────────────────────
+function updateCountdown() {
+  const now = new Date();
+  const midnight = new Date(now); midnight.setHours(24,0,0,0);
+  const diff = midnight - now;
+  const h = String(Math.floor(diff/3600000)).padStart(2,'0');
+  const m = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+  const s = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+  document.getElementById('countdown').textContent = `${h}:${m}:${s}`;
+}
+setInterval(updateCountdown, 1000);
+updateCountdown();
+
+// ─────────────────────────────────────────────
+// RENDER HELPERS
+// ─────────────────────────────────────────────
+function renderDifficulty(level) {
+  let html = '';
+  for (let i=1;i<=5;i++) html += `<div class="dot ${i<=level?'on':''}"></div>`;
+  document.getElementById('qDiff').innerHTML = html;
+}
+
+function renderQuestion(q) {
+  document.getElementById('qType').textContent = q.type;
+  document.getElementById('qNum').textContent = `Q${gameState.questionIndex + 1}`;
+  renderDifficulty(q.difficulty);
+
+  const seqEl = document.getElementById('qSequence');
+  if (q.sequence) {
+    seqEl.style.display = 'flex';
+    seqEl.innerHTML = q.sequence.map(v =>
+      `<div class="seq-item ${v==='?'?'blank':''}">${v}</div>`
+    ).join('');
+  } else {
+    seqEl.style.display = 'none';
+  }
+
+  document.getElementById('questionText').textContent = q.text;
+  const hintEl = document.getElementById('questionHint');
+  if (q.hint) { hintEl.textContent = '💡 ' + q.hint; hintEl.style.display = 'block'; }
+  else hintEl.style.display = 'none';
+
+  // reset card glow
+  document.getElementById('questionCard').classList.remove('correct-glow');
+  // hide feedback + next
+  document.getElementById('feedbackPanel').className = 'feedback-panel';
+  document.getElementById('nextBtn').className = 'btn-next';
+  document.getElementById('gameOver').className = 'game-over';
+}
+
+function renderOptions(q, disabled=false, prevSelected=null) {
+  const grid = document.getElementById('optionsGrid');
+  const labels = ['A','B','C','D','E'];
+  selectedOption = null;
+  grid.innerHTML = q.options.map((opt,i) => {
+    let cls = '';
+    if (disabled) {
+      if (i === q.answer) cls = 'correct';
+      else if (i === prevSelected && prevSelected !== q.answer) cls = 'wrong';
+    }
+    return `<button class="option-btn ${cls}"
+      id="opt${i}"
+      onclick="selectOption(${i})"
+      ${disabled?'disabled':''}>
+      <span class="opt-label">${labels[i]}</span>${opt}
+    </button>`;
+  }).join('');
+  document.getElementById('submitBtn').disabled = true;
+}
+
+function selectOption(i) {
+  selectedOption = i;
+  document.querySelectorAll('.option-btn').forEach((b,idx)=>b.classList.toggle('selected',idx===i));
+  document.getElementById('submitBtn').disabled = false;
+}
+
+function updateStreakBanner() {
+  document.getElementById('streakCount').textContent = gameState.streak;
+  // flame emoji scales with streak
+  const flames = ['🧠','🔥','🔥','⚡','⚡','🌟','🌟','💥','💥','👑'];
+  document.getElementById('streakFlame').textContent = flames[Math.min(gameState.streak, flames.length-1)];
+
+  const best = Math.max(...gameState.history.reduce((acc,v,i)=>{
+    // compute running max streak
+    return acc;
+  }, [0]), gameState.streak);
+
+  // compute best from history
+  let runBest=0, run=0;
+  for (const v of gameState.history) { if(v){run++; if(run>runBest)runBest=run;} else run=0; }
+  if (gameState.streak > runBest) runBest = gameState.streak;
+  document.getElementById('bestLabel').textContent = runBest;
+
+  // dot trail (last 10)
+  const trail = gameState.history.slice(-10);
+  const trailEl = document.getElementById('dotTrail');
+  trailEl.innerHTML = trail.map(v=>`<div class="trail-dot ${v?'won':'lost'}"></div>`).join('');
+}
+
+function updateStatsDisplay() {
+  const s = loadGlobalStats();
+  document.getElementById('statSessions').textContent = s.sessions || 0;
+  document.getElementById('statBestEver').textContent = s.bestEver || 0;
+  document.getElementById('statDayStreak').textContent = s.dayStreak || 0;
+}
+
+// ─────────────────────────────────────────────
+// GAME LOGIC
+// ─────────────────────────────────────────────
+function submitAnswer() {
+  if (selectedOption === null) return;
+  const q = getCurrentQuestion();
+  const correct = selectedOption === q.answer;
+
+  // lock options
+  renderOptions(q, true, selectedOption);
+  document.getElementById('submitBtn').disabled = true;
+
+  // update state
+  gameState.history.push(correct);
+
+  if (correct) {
+    gameState.streak++;
+    showFeedback(q, true);
+    document.getElementById('questionCard').classList.add('correct-glow');
+    document.getElementById('nextBtn').className = 'btn-next show';
+  } else {
+    gameState.streak = 0; // reset streak on wrong answer (kept in history)
+    gameState.over = true;
+    showFeedback(q, false);
+    setTimeout(()=>showGameOver(q), 1200);
+  }
+
+  updateStreakBanner();
+  saveSession();
+}
+
+// ─────────────────────────────────────────────
+// SEEDED % CORRECT per question
+// Uses difficulty + a small per-question jitter so each feels unique
+// ─────────────────────────────────────────────
+function getQuestionPct(q) {
+  // Base range by difficulty (1=easy … 5=hard)
+  const base = [78, 65, 52, 38, 24][q.difficulty - 1] ?? 50;
+  // Stable jitter: hash the question text into ±12
+  let h = 0;
+  for (let i = 0; i < q.text.length; i++) h = (h * 31 + q.text.charCodeAt(i)) & 0xffff;
+  const jitter = ((h % 25) - 12); // −12 … +12
+  return Math.min(96, Math.max(8, base + jitter));
+}
+
+function showFeedback(q, correct) {
+  const panel = document.getElementById('feedbackPanel');
+  panel.className = `feedback-panel show ${correct?'fb-correct':'fb-wrong'}`;
+  document.getElementById('fbIcon').textContent = correct ? '✅' : '❌';
+  const titles = correct
+    ? ['Correct!','Brilliant!','Spot on!','Sharp!','Nailed it!']
+    : ['Wrong!','Not quite.','Incorrect.','Unlucky!'];
+  document.getElementById('fbTitle').textContent = titles[Math.floor(Math.random()*titles.length)];
+  document.getElementById('fbExplanation').textContent = q.explanation;
+  const ansEl = document.getElementById('fbCorrectAns');
+  if (!correct) {
+    ansEl.innerHTML = `Correct answer: <strong>${String.fromCharCode(65+q.answer)}. ${q.options[q.answer]}</strong>`;
+  } else {
+    ansEl.textContent = '';
+  }
+
+  // % bar
+  const pct = getQuestionPct(q);
+  const tier = pct >= 60 ? 'pct-high' : pct >= 35 ? 'pct-mid' : 'pct-low';
+  const numEl  = document.getElementById('pctNumber');
+  const fillEl = document.getElementById('pctBarFill');
+  numEl.textContent = pct + '%';
+  numEl.className = 'pct-number ' + tier;
+  fillEl.className = 'pct-bar-fill ' + tier;
+  // Trigger animation after a short delay so the panel is visible first
+  fillEl.style.width = '0';
+  setTimeout(() => { fillEl.style.width = pct + '%'; }, 80);
+}
+
+function showGameOver(q) {
+  // count correct streak before the last wrong
+  const totalCorrect = gameState.history.filter(Boolean).length;
+  // but "today's streak" is the run that just ended
+  const streak = totalCorrect; // they may have gotten some right before
+
+  // calculate run that just ended
+  let lastRun = 0;
+  for (let i = gameState.history.length-2; i >= 0; i--) {
+    if (gameState.history[i]) lastRun++;
+    else break;
+  }
+
+  document.getElementById('goScore').textContent = lastRun;
+  const gs = updateGlobalStats(lastRun, true);
+  updateStatsDisplay();
+
+  const isNewBest = lastRun >= (gs.bestEver || 0);
+  document.getElementById('goBest').innerHTML = isNewBest && lastRun > 0
+    ? `🏆 New personal best!`
+    : `Your best today: <strong>${lastRun}</strong> · All-time best: <strong>${gs.bestEver || 0}</strong>`;
+
+  document.getElementById('goSub').innerHTML =
+    `You answered <strong style="color:var(--gold)">${lastRun}</strong> question${lastRun!==1?'s':''} correctly before getting one wrong.<br>Come back tomorrow for another run.`;
+
+  document.getElementById('gameOver').className = 'game-over show';
+  document.getElementById('nextBtn').className = 'btn-next'; // hide next btn
+}
+
+function nextQuestion() {
+  gameState.questionIndex++;
+  saveSession();
+
+  // Check if we've exhausted all questions (amazing!)
+  if (gameState.questionIndex >= QUESTIONS.length) {
+    showAllAnswered();
+    return;
+  }
+
+  const q = getCurrentQuestion();
+  // animate card swap
+  const card = document.getElementById('questionCard');
+  card.style.opacity = '0';
+  card.style.transform = 'translateY(12px)';
+  setTimeout(() => {
+    renderQuestion(q);
+    renderOptions(q);
+    card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    card.style.opacity = '1';
+    card.style.transform = 'translateY(0)';
+    setTimeout(()=>{ card.style.transition = ''; }, 350);
+  }, 200);
+}
+
+function showAllAnswered() {
+  document.getElementById('gameArea').style.display = 'none';
+  const ds = document.getElementById('doneScreen');
+  ds.className = 'done-screen show';
+  document.getElementById('dsIcon').textContent = '🏆';
+  document.getElementById('dsTitle').textContent = 'Unbelievable!';
+  document.getElementById('dsScore').textContent = QUESTIONS.length;
+  document.getElementById('dsText').innerHTML =
+    `You answered <strong>every single question</strong> correctly — all ${QUESTIONS.length}!<br>You are in a class of your own. Come back tomorrow.`;
+  updateGlobalStats(QUESTIONS.length, false);
+  updateStatsDisplay();
+}
+
+// ─────────────────────────────────────────────
+// SHARE
+// ─────────────────────────────────────────────
+function buildShareText() {
+  const d = new Date();
+  const dateStr = d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  // build emoji trail
+  const trail = gameState.history.slice(0,10).map(v=>v?'🟢':'🔴').join('');
+  const correctCount = gameState.history.filter(Boolean).length;
+  // streak before last wrong
+  let run=0;
+  for(let i=gameState.history.length-(gameState.over?2:1);i>=0;i--){
+    if(gameState.history[i]) run++;
+    else break;
+  }
+  const score = gameState.over ? run : gameState.streak;
+  return `IQ Daily — ${dateStr}\n${trail}\n🧠 ${score} correct in a row\n#IQDaily`;
+}
+
+function shareResult() {
+  navigator.clipboard.writeText(buildShareText()).then(()=>{
+    document.querySelectorAll('.share-copied').forEach(el=>{
+      el.style.display='block';
+      setTimeout(()=>el.style.display='none',2500);
+    });
+  });
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+function init() {
+  const d = new Date();
+  document.getElementById('dateDisplay').textContent =
+    d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  dailyOrder = buildDailyOrder();
+
+  const session = loadSession();
+  const gs = loadGlobalStats();
+
+  if (session) {
+    // Restore session
+    dailyOrder = session.order || dailyOrder;
+    gameState.questionIndex = session.questionIndex;
+    gameState.streak = session.streak;
+    gameState.history = session.history;
+    gameState.over = session.over;
+
+    updateStreakBanner();
+    updateStatsDisplay();
+
+    if (session.over) {
+      // Game ended — show done screen
+      document.getElementById('gameArea').style.display = 'none';
+      const ds = document.getElementById('doneScreen');
+      ds.className = 'done-screen show';
+      document.getElementById('dsIcon').textContent = '💥';
+      // recalculate last run
+      let lastRun=0;
+      for(let i=session.history.length-2;i>=0;i--){
+        if(session.history[i]) lastRun++;
+        else break;
+      }
+      document.getElementById('dsTitle').textContent = lastRun > 0 ? `Today's run: ${lastRun} in a row` : "Tough one today!";
+      document.getElementById('dsScore').textContent = lastRun;
+      document.getElementById('dsText').innerHTML =
+        `Your run ended today. Come back tomorrow for a fresh start!`;
+    } else {
+      // Still playing — resume
+      const q = getCurrentQuestion();
+      renderQuestion(q);
+      renderOptions(q);
+    }
+  } else {
+    // New session
+    updateGlobalStats(0, false); // register the day
+    updateStatsDisplay();
+    updateStreakBanner();
+    const q = getCurrentQuestion();
+    renderQuestion(q);
+    renderOptions(q);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
